@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status, Query, Response
 from src.assets import controller
-from src.assets.dtos import AssetSchema, AssetEditSchema, AssetResponseSchema, AssetBulkSchema, AssetStatusResponse 
+from src.assets.dtos import AssetCreate, AssetEdit, Asset, AssetBulk, AssetResponse, AssetPaginationResponse
 from src.utils.db import get_db
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -12,23 +12,23 @@ assets_routes = APIRouter(prefix="/assets")
 
 # **responses** to document dynmic status codes and responses that don't get documented by default
 
-@assets_routes.post("", response_model=AssetStatusResponse , status_code=status.HTTP_201_CREATED,
-                responses={200: {"description": "Successful Update Response", "model": AssetStatusResponse},
-                           409: {"description": "Conflict (Duplication) Error", "model": AssetStatusResponse},}
+@assets_routes.post("", response_model=AssetResponse , status_code=status.HTTP_201_CREATED,
+                responses={200: {"description": "Successful Update Response", "model": AssetResponse},
+                           409: {"description": "Conflict (Duplication) Error", "model": AssetResponse},}
                     )
-def create_asset(body: AssetSchema, response: Response, db: Session = Depends(get_db), 
+def create_asset(body: AssetCreate, response: Response, db: Session = Depends(get_db), 
                  user:UserModel = Depends(is_authenticated)):
     return controller.create_asset(body, response, db)
 
 
-@assets_routes.post("/bulk", response_model=List[AssetStatusResponse ], status_code=status.HTTP_200_OK,
-                        responses={400: {"description": "All Bulk Failed", "model": AssetStatusResponse}}
+@assets_routes.post("/bulk-create", response_model=List[AssetResponse], status_code=status.HTTP_200_OK,
+                        responses={400: {"description": "All Bulk Failed", "model": AssetResponse}}
                     )
-def bulk_create_assets(body: List[AssetBulkSchema], response: Response, db: Session = Depends(get_db), user:UserModel = Depends(is_authenticated)):
+def bulk_create_assets(body: List[AssetBulk], response: Response, db: Session = Depends(get_db), user:UserModel = Depends(is_authenticated)):
     return controller.bulk_create_assets(body, response, db)
 
 
-@assets_routes.get("", response_model=List[AssetResponseSchema], status_code=status.HTTP_200_OK)
+@assets_routes.get("", response_model=AssetPaginationResponse, status_code=status.HTTP_200_OK)
 def get_assets(db: Session = Depends(get_db), user:UserModel = Depends(is_authenticated),
     # for filtering
     type: Optional[AssetType] = Query(None),
@@ -40,7 +40,7 @@ def get_assets(db: Session = Depends(get_db), user:UserModel = Depends(is_authen
     order: str ="asc",
     # for paginataion
     skip: int = 0,
-    limit: int = 25,
+    limit: int = 50,
     ):
     return controller.get_assets(db, 
             type, status, tags, value, 
@@ -48,20 +48,19 @@ def get_assets(db: Session = Depends(get_db), user:UserModel = Depends(is_authen
             skip, limit)
 
 
-@assets_routes.get("/{asset_id}", response_model=AssetResponseSchema, status_code=status.HTTP_200_OK,
-                    responses={404: {"description": "Not Found Error"}}
+@assets_routes.get("/{asset_id}", response_model=AssetResponse,status_code=status.HTTP_200_OK,
+                    responses={404: {"description": "Not Found Error", "model": AssetResponse}}
                    )
-def get_asset(asset_id: str, db: Session = Depends(get_db), user:UserModel = Depends(is_authenticated)):
-    return controller.get_asset(asset_id, db)
+def get_asset(asset_id: str, response: Response, db: Session = Depends(get_db), user:UserModel = Depends(is_authenticated)):
+    return controller.get_asset(asset_id, response, db)
 
 
 
-@assets_routes.patch("/{asset_id}", response_model=AssetResponseSchema, status_code=status.HTTP_200_OK,
-                        responses={404: {"description": "Not Found Error"}}
+@assets_routes.patch("/{asset_id}", response_model=AssetResponse, status_code=status.HTTP_200_OK,
+                        responses={404: {"description": "Not Found Error", "model": AssetResponse}}
                      )
-def update_asset(body: AssetEditSchema, asset_id: str, db: Session = Depends(get_db), user:UserModel = Depends(is_authenticated)):
-    return controller.update_asset(body, asset_id, db)
-
+def update_asset(body: AssetEdit, asset_id: str, response:Response, db: Session = Depends(get_db), user:UserModel = Depends(is_authenticated)):
+    return controller.update_asset(body, asset_id, response, db)
 
 
 @assets_routes.delete("/{asset_id}", response_model= None, status_code=status.HTTP_204_NO_CONTENT,

@@ -10,7 +10,7 @@ def assert_json_equal(req_json, data):
 # --------------- Grpah Relationship Helper ---------------
 # ensure parent ids and children ids hierarchy is correct
 def assert_graph_equal(expected, actual):
-    assert expected["id"] == actual["id"] 
+    assert expected["id"] == actual["asset"]["id"] 
 
     assert len(expected["children"]) == len(actual["children"]) 
 

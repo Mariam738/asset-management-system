@@ -28,5 +28,3 @@ def login(body: LoginSchema, db: Session = Depends(get_db)):
                 )
 def is_auth(user: UserSchema = Depends(is_authenticated)):
     return user
-# def is_auth(request: Request, db: Session = Depends(get_db)):
-#     return is_authenticated(request, db)

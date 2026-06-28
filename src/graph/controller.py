@@ -1,4 +1,4 @@
-from src.assets.dtos import AssetResponseSchema
+from src.assets.dtos import Asset
 from src.graph.dtos import GraphNode
 from src.relationships.models import RelationshipModel
 from sqlalchemy.orm import Session
@@ -10,15 +10,12 @@ def get_children(asset_id: str, db: Session):
     children = db.query(RelationshipModel).filter(RelationshipModel.to_id == asset_id).all()
 
     asset = db.query(AssetModel).filter(AssetModel.id == asset_id).first()
-    asset_orm = AssetResponseSchema.model_validate(asset, from_attributes=True)
-    node: GraphNode = {
-        **asset_orm.model_dump(),
-        "children": []
-    }
+    asset = Asset.model_validate(asset, from_attributes=True)
+    node = GraphNode(asset=asset, children=[])
 
     for child in children:
         child_node = get_children(child.from_id, db)
-        node["children"].append(child_node)
+        node.children.append(child_node)
 
     return node
 
@@ -28,13 +25,12 @@ def get_root_id(asset_id: str, db: Session):
     if not parents:
         return asset_id
     
-    # ASSUMING it is a tree 
+    # ASSUMING there is always a
     # Then ofcouse domain will always be at top
     parent = parents[0]
     return get_root_id(parent.to_id, db)
 
 def get_graph(asset_id: str, db: Session):
-    print(asset_id)
     asset = db.query(AssetModel).get(asset_id)
 
     if not asset:

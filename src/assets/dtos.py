@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 
 # No Nulls, Allow Defaults -> Strong INPUT VALIDATION
-class AssetSchema(BaseModel):
+class AssetCreate(BaseModel):
     id: str 
     type: AssetType 
     value: str 
@@ -18,11 +18,9 @@ class AssetSchema(BaseModel):
     tags: List[str]  = Field(default_factory=list)
     meta: Dict[str, Any]  = Field(default_factory=dict, alias="metadata") # alis is the solution to metadata being reserved in sqlalchemy
 
-    covers: str | None = None
-    parent: str | None = None
 
 # Allow Null, Allow Defaults -> Bulk is usually unclean, with duplicates
-class AssetBulkSchema(BaseModel):
+class AssetBulk(BaseModel):
     id: str | None = None
     type: AssetType | None = None
     value: str | None = None
@@ -35,11 +33,9 @@ class AssetBulkSchema(BaseModel):
     tags: List[str]  = Field(default_factory=list)
     meta: Dict[str, Any]  = Field(default_factory=dict, alias="metadata") # alis is the solution to metadata being reserved in sqlalchemy
 
-    covers: str | None = None
-    parent: str | None = None
     
 # All Optional -> Support PUT
-class AssetEditSchema(BaseModel):
+class AssetEdit(BaseModel):
     id: str | None = None
     type: AssetType | None = None
     value: str | None = None
@@ -53,7 +49,7 @@ class AssetEditSchema(BaseModel):
     meta: Dict[str, Any]  | None = Field(None, alias="metadata") # alis is the solution to metadata being reserved in sqlalchemy
 
 # -> Return data from db
-class AssetResponseSchema(BaseModel):
+class Asset(BaseModel):
     id: str 
     type: AssetType 
     value: str 
@@ -66,20 +62,14 @@ class AssetResponseSchema(BaseModel):
     tags: List[str] 
     meta: Dict[str, Any]  
 
-class AssetEntity(BaseModel):
-    id: str 
-    type: AssetType 
-    value: str 
-    status: AssetStatus 
-
-    first_seen: datetime 
-    last_seen : datetime 
-
-    source: str 
-    tags: List[str] 
-    meta: Dict[str, Any]  
-
-class AssetStatusResponse (BaseModel):
+class AssetResponse (BaseModel):
     status: str
     message: str
-    asset: AssetEntity | None = None
+    asset: Asset | None = None
+    
+class AssetPaginationResponse(BaseModel):
+    total: int
+    skip: int
+    limit: int
+    count: int
+    data: List[Asset]

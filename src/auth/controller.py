@@ -1,4 +1,4 @@
-from src.auth.dtos import UserSchema, LoginSchema
+from src.auth.dtos import UserSchema, LoginSchema, TokenResponse
 from sqlalchemy.orm import Session
 from src.auth.model import UserModel
 from fastapi import HTTPException, status, Request
@@ -49,6 +49,6 @@ def login(body: LoginSchema, db: Session):
     
     token = jwt.encode({"_id": user.id, "exp": exp_time.timestamp()}, settings.SECRET_KEY, settings.ALGORITHM)
 
-    return {"token": token}
+    return TokenResponse(token= token)
 
 

@@ -4,7 +4,7 @@ from fastapi import Depends
 from src.utils.db import get_db
 from pytz import UTC
 from src.assets.model import AssetModel
-from src.assets.dtos import AssetEntity
+from src.assets.dtos import Asset
 from src.utils.db import SessionLocal
 from datetime import datetime, date
 

@@ -6,11 +6,10 @@ from src.utils.settings import settings
 from jwt.exceptions import InvalidTokenError
 from src.utils.db import get_db
 
-from fastapi.security import  APIKeyHeader, HTTPBearer
+from fastapi.security import  APIKeyHeader
 from fastapi import Form
 
 api_key_header = APIKeyHeader(name="Authorization")
-# bearer = HTTPBearer()
 
 def is_authenticated(token: str = Depends(api_key_header), db:Session = Depends(get_db)):
     try:
@@ -30,9 +29,3 @@ def is_authenticated(token: str = Depends(api_key_header), db:Session = Depends(
     
     except InvalidTokenError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token.")
-
-
-
-# def is_authenticated(request: Request, db:Session = Depends(get_db)):
-#     try:
-#         token = request.headers.get("authorization")

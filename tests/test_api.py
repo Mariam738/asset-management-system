@@ -63,7 +63,7 @@ def auth_headers(auth_token):
 def init_test_db(auth_headers):
     # 1) Bulk Create Assets 
     response = client.post(
-        "/assets/bulk",
+        "/assets/bulk-create",
         json = bulk_related_assets_json,
         headers=auth_headers
     )
@@ -71,7 +71,7 @@ def init_test_db(auth_headers):
     
     # 2) Bulk Create Relationships
     response = client.post(
-        "/relationships/bulk",
+        "/relationships/bulk-create",
         json = bulk_related_assets_json,
         headers=auth_headers
     )
@@ -161,7 +161,7 @@ def test_filter_by_value(auth_headers):
     )
     # 2) Check response contains filtered ids
     expected_ids = filter_value_ex_ids
-    response_ids = [item["id"] for item in response.json()]
+    response_ids = [item["id"] for item in response.json()["data"]]
     assert set(expected_ids) == set(response_ids)
 
 def test_filter_by_value_and_tag(auth_headers):
@@ -173,7 +173,7 @@ def test_filter_by_value_and_tag(auth_headers):
 
     # 2) Check response contains filtered ids
     expected_ids = filter_value_ex_tags_pub_ids
-    response_ids = [item["id"] for item in response.json()]
+    response_ids = [item["id"] for item in response.json()["data"]]
     assert set(expected_ids) == set(response_ids)
 
 def test_filter_by_value_and_two_tags(auth_headers):
@@ -185,7 +185,7 @@ def test_filter_by_value_and_two_tags(auth_headers):
 
     # 2) Check response contains filtered ids
     expected_ids = filter_value_ex_tags_pub_root_ids
-    response_ids = [item["id"] for item in response.json()]
+    response_ids = [item["id"] for item in response.json()["data"]]
     assert set(expected_ids) == set(response_ids)
 
 def test_sort_desc_by_id(auth_headers):
@@ -197,22 +197,21 @@ def test_sort_desc_by_id(auth_headers):
     
     # 2) Check response contains filtered ids in SAME ORDER
     expected_ids = sort_desc_by_first_seen_ids
-    response_ids = [item["id"] for item in response.json()]
+    response_ids = [item["id"] for item in response.json()["data"]]
     print(response_ids)
     assert expected_ids == response_ids
     
 # --------------- Grpah Relationship ---------------
 
 def test_graph(auth_headers):
-    # 1) Create Bulk Asset -> this will automatically create realation ships
-    response = client.post(
+    # 1) Relationships were created @ init_db
+    response = client.get(
         "/graph?asset_id=a4",  # node in middle
-        json = bulk_related_assets_json,
         headers=auth_headers
     )
-
+    # assert response.status_code==201, response.json()
     # 2) Assert Correct Graph/Tree Hierarchy
-    assert(expected_graph_ids, response.json())
+    assert_graph_equal(expected_graph_ids, response.json())
 
 
 
