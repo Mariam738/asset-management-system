@@ -54,18 +54,20 @@ docker compose run --rm web pytest
 * Full Documentation
     * Documented dynmaic status Codes using additional responses ✅
     * Injected scheme forces the Authorize button to appear in /docs 🔐
+* Implemented Authentication on **all CRUD operations** to extend multi-tenant isolation later
 ```http
   http://127.0.0.1:8000/docs
 ```
   * <img width="1337" height="831" alt="image" src="https://github.com/user-attachments/assets/bc5ee80f-1d4c-4cc7-b58d-f88c9c91b567" />
-
+* Refactored code to use **Generics**
+* <img width="377" height="317" alt="image" src="https://github.com/user-attachments/assets/9eb6c1e3-8651-4329-9ae9-6cbd790c15c4" />
 
 ## Test Results
 * <img width="692" height="67" alt="image" src="https://github.com/user-attachments/assets/acb0b798-6b61-4ae7-bdf4-76d1c9853d10" />
 
 
 ## Top Do 📌
-* Multi-tenant Isolation
+* Multi-tenant Isolation 
 
 ## References
 * [How to Implement Bulk Operations in REST APIs✨](https://oneuptime.com/blog/post/2026-01-27-rest-api-bulk-operations/view)
