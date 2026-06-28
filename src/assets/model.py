@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Enum, DateTime, JSON, UniqueConstraint
+from sqlalchemy import Column, String, Enum, DateTime, JSON, UniqueConstraint, Index
 from src.utils.db import Base
 from src.assets.enums import AssetStatus, AssetType
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
@@ -25,4 +25,9 @@ class AssetModel(Base):
     # Composite uniqueness constraint
     __table_args__ = (
         UniqueConstraint("type", "value", name="uq_asset_type_value"),
+        # Indexes to speed up filtering
+        Index("idx_asset_type", "type"),
+        Index("idx_asset_status", "status"),
+        Index("idx_asset_value", "value"),
+        Index("idx_asset_tags_gin", "tags", postgresql_using="gin")  # gin for array filtering
     )

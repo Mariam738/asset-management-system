@@ -9,13 +9,6 @@ class Relationship(BaseModel):
     to_asset: Asset 
     type: RelationshipsType 
 
-# Minimal return till ids on create and bulk create
-class RelationshipResponse(BaseModel):
-    status: str
-    message: str
-    data: Relationship | None = None
-
-
 class RelationshipCreate(BaseModel):
     id: str
     parent: str | None = None
@@ -27,11 +20,5 @@ class RelationshipBulk(BaseModel):
     parent: str | None = None
     covers: str | None = None
 
-class RelationshipPaginationResponse(BaseModel):
-    total: int
-    skip: int
-    limit: int
-    count: int
-    data: List[Relationship]
 
 

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from src.utils.db import get_db
 from src.auth.dtos import UserSchema, UserResponseSchema, LoginSchema, TokenResponse
 from src.auth import controller
-from src.utils.helpers import is_authenticated
+from src.utils.dependencies import is_authenticated
 
 auth_routes = APIRouter(prefix="/auth")
 

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from src.relationships.dtos import RelationshipCreate, RelationshipResponse, RelationshipBulk, Relationship, RelationshipPaginationResponse
+from src.relationships.dtos import RelationshipCreate, RelationshipBulk, Relationship
 from src.assets.model import AssetModel
 from fastapi import HTTPException, status, Query
 from src.relationships.enums import RelationshipsType
@@ -9,6 +9,8 @@ from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 from fastapi import Response
 from src.assets.dtos import Asset
+from src.dto_common import ApiResponse, PaginationResponse
+
 
 ## ------ Helpers ------
 def infer_relationship_type(from_type, to_type):
@@ -59,11 +61,11 @@ def validate_input_relationship(data, response: Response, db: Session):
     if not parent and not covers:
         if response:
             response.status_code = status.HTTP_422_UNPROCESSABLE_CONTENT
-        return RelationshipResponse(status="Error", message="Invalid relationship: missing fields 'parent' or 'covers'", data= None)
+        return ApiResponse(status="Error", message="Invalid relationship: missing fields 'parent' or 'covers'", data= None)
     if parent and covers:
         if response:
             response.status_code = status.HTTP_422_UNPROCESSABLE_CONTENT
-        return RelationshipResponse(status="Error", message="Invalid relationship: one field is required either'parent' or 'covers'", data=None)
+        return ApiResponse(status="Error", message="Invalid relationship: one field is required either'parent' or 'covers'", data=None)
     return True
 
 def validate_from_asset(data, response: Response, db: Session):
@@ -74,7 +76,7 @@ def validate_from_asset(data, response: Response, db: Session):
     if not from_asset:
         if response:
             response.status_code = status.HTTP_404_NOT_FOUND
-        return RelationshipResponse(status="Error", message="Invalid relationship: From asset ID is not found'", data=None)
+        return ApiResponse(status="Error", message="Invalid relationship: From asset ID is not found'", data=None)
     data["from_id"] = data.pop("id")
     return from_asset
 
@@ -95,7 +97,7 @@ def validate_to_asset(data, response: Response, db: Session):
     if not to_asset:
         if response:
             response.status_code = status.HTTP_404_NOT_FOUND
-        return RelationshipResponse(status="Error", message="Invalid relationship: To asset ID is not found'", data= None)
+        return ApiResponse(status="Error", message="Invalid relationship: To asset ID is not found'", data= None)
     return to_asset
 
 # Helper used in create and edit
@@ -104,17 +106,17 @@ def save_relationship_helper(body: RelationshipCreate, response: Response, db: S
 
     # 1) validate input data
     result = validate_input_relationship(data, response, db)
-    if isinstance(result, RelationshipResponse):
+    if isinstance(result, ApiResponse):
         return result
 
     # 2) validate from asset
     from_asset = validate_from_asset(data, response, db)
-    if isinstance(from_asset, RelationshipResponse):
+    if isinstance(from_asset, ApiResponse):
         return from_asset
 
     # 3) validate to asset
     to_asset = validate_to_asset(data, response, db)
-    if isinstance(to_asset, RelationshipResponse):
+    if isinstance(to_asset, ApiResponse):
         return to_asset
 
 
@@ -124,7 +126,7 @@ def save_relationship_helper(body: RelationshipCreate, response: Response, db: S
     if inferred_type is None:
         if response:
             response.status_code = status.HTTP_400_BAD_REQUEST
-        return RelationshipResponse(status="Error", message=f"Invalid relationship type between assets: {from_asset.type.value} -> {to_asset.type.value}'",
+        return ApiResponse(status="Error", message=f"Invalid relationship type between assets: {from_asset.type.value} -> {to_asset.type.value}'",
                                     data=None)
     
     # Ensure 1 record IP->SUBDMAIN (No duplicated reversed rows) 
@@ -144,7 +146,7 @@ def save_relationship_helper(body: RelationshipCreate, response: Response, db: S
 def create_relationship(body: RelationshipCreate, response: Response, db: Session):
     
     result = save_relationship_helper(body, response, db)
-    if isinstance(result, RelationshipResponse):
+    if isinstance(result, ApiResponse):
         return result
     
     data, from_asset, to_asset = result
@@ -157,14 +159,14 @@ def create_relationship(body: RelationshipCreate, response: Response, db: Sessio
         db.commit()
         db.refresh(relationship)
         relationship = Relationship(id=relationship.id,from_asset=from_asset, to_asset= to_asset, type= data["type"])
-        return RelationshipResponse(status="Created", message=f"Relationship {relationship.id} created successfully",data=relationship)
+        return ApiResponse(status="Created", message=f"Relationship {relationship.id} created successfully",data=relationship)
     # enforce unique constraints of uq_relationship_from_to
     except IntegrityError as e:
         db.rollback()
         print("Integrity Error:", str(e.orig))
         if response:
             response.status_code = status.HTTP_409_CONFLICT
-        return RelationshipResponse(status="Error", message="Duplicate relationship: another relationship with the same from_id and to_id already exists under a different ID.",data=None)
+        return ApiResponse(status="Error", message="Duplicate relationship: another relationship with the same from_id and to_id already exists under a different ID.",data=None)
 
 
 def bulk_create_relationship(body: List[RelationshipBulk], response: Response, db: Session):
@@ -225,7 +227,7 @@ def get_relationships(db: Session,
     for relation in relations:
         response.append(expand_relationship(relation, db))
 
-    return RelationshipPaginationResponse(total=total, skip=skip, limit=limit, count=len(response), data= response)
+    return PaginationResponse(total=total, skip=skip, limit=limit, count=len(response), data= response)
 
 
 def get_relationship(relationship_id: int, response: Response, db: Session):
@@ -233,20 +235,20 @@ def get_relationship(relationship_id: int, response: Response, db: Session):
 
     if not relationship:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return RelationshipResponse(status="Error", message="Relationship ID is not found", data= None)
+        return ApiResponse(status="Error", message="Relationship ID is not found", data= None)
     
     relationship = expand_relationship(relationship, db)
-    return RelationshipResponse(status="Success", message="Relationship retrieved successfully", data=relationship)
+    return ApiResponse(status="Success", message="Relationship retrieved successfully", data=relationship)
     
 
 def edit_relationship(body: RelationshipCreate,response: Response, relationship_id: int, db: Session):
     relationship = db.query(RelationshipModel).get(relationship_id)
     if not relationship:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return RelationshipResponse(status="Error", message="Relationship ID is not found.",data=None)
+        return ApiResponse(status="Error", message="Relationship ID is not found.",data=None)
     
     result = save_relationship_helper(body, response, db)
-    if isinstance(result, RelationshipResponse):
+    if isinstance(result, ApiResponse):
         return result
     
     data, from_asset, to_asset = result
@@ -264,7 +266,7 @@ def edit_relationship(body: RelationshipCreate,response: Response, relationship_
         to_asset = Asset.model_validate(to_asset, from_attributes=True)
         
         relationship = Relationship(id=relationship.id,from_asset=from_asset, to_asset= to_asset, type= data["type"])
-        return RelationshipResponse(status="Updated", message=f"Relationship {relationship.id} created successfully",data=relationship)
+        return ApiResponse(status="Updated", message=f"Relationship {relationship.id} created successfully",data=relationship)
     
 
     # enforce unique constraints of uq_relationship_from_to
@@ -272,7 +274,7 @@ def edit_relationship(body: RelationshipCreate,response: Response, relationship_
         db.rollback()
         print("Integrity Error:", str(e.orig))
         response.status_code = status.HTTP_409_CONFLICT
-        return RelationshipResponse(status="Error", message="Duplicate relationship: another relationship with the same from_id and to_id already exists under a different ID.",
+        return ApiResponse(status="Error", message="Duplicate relationship: another relationship with the same from_id and to_id already exists under a different ID.",
                                     data=None)
     
 

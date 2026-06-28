@@ -41,7 +41,7 @@ def auth_token(setup_test_db):
     name = "Lea Ashley"
     username = "lea"
     email = "lea@gmail.com"
-    password = "1234"
+    password = "1234Aa$$"
     response = client.post(
         "/auth/register",
         json={"name": name,"username": username,"email": email,"password": password},
@@ -92,7 +92,7 @@ def test_dedup_same_asset(auth_headers):
     assert response.status_code == 201, response.text
     data = response.json()
     assert data["status"] == "Created"
-    assert_json_equal(asset_req_json, data["asset"])      # assert response is same as request body
+    assert_json_equal(asset_req_json, data["data"])      # assert response is same as request body
 
     # 3) Recreate Same Duplicate
     response = client.post(
@@ -105,7 +105,7 @@ def test_dedup_same_asset(auth_headers):
     assert response.status_code == 200, response.text
     
     assert response.json()["status"] == "Updated"
-    data = response.json()["asset"]
+    data = response.json()["data"]
     assert data["first_seen"] != data["last_seen"]   # ensure last seen is updated
     assert_json_equal(asset_req_json, data)      # assert everything is the same (id,...)
 
@@ -136,7 +136,7 @@ def test_dedup_mrege_asset(auth_headers):
     # 3) Assert correct dedup(status code, response: status, source tags, meta)
     assert response.status_code == 200, response.textcx
     assert response.json()["status"] == "Updated"
-    data = response.json()["asset"]
+    data = response.json()["data"]
     assert data["id"] == merged_expected_res_json["id"] # same id nothing new
     assert data["first_seen"] != data["last_seen"]   # ensure last seen is updated
     assert data["status"] == merged_expected_res_json["status"] # updated status

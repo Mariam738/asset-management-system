@@ -1,5 +1,5 @@
 from src.utils.db import Base
-from sqlalchemy import Column, String, Integer, Enum, UniqueConstraint, ForeignKey
+from sqlalchemy import Column, String, Integer, Enum, UniqueConstraint, ForeignKey, Index
 from src.relationships.enums import RelationshipsType
 
 class RelationshipModel(Base):
@@ -13,4 +13,6 @@ class RelationshipModel(Base):
     # Composite uniqueness constraint
     __table_args__ = (
         UniqueConstraint("from_id", "to_id", name="uq_relationship_from_to"),
+        Index("idx_relationship_from", "from_id"),         # speed up get root
+        Index("idx_relationship_to", "to_id"),         # speed filtering by to id
     )

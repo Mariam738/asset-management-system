@@ -3,7 +3,7 @@ from src.graph import controller
 from sqlalchemy.orm import Session
 from src.utils.db import get_db
 from src.auth.model import UserModel
-from src.utils.helpers import is_authenticated
+from src.utils.dependencies import is_authenticated
 from src.graph.dtos import GraphNode
 
 graph_routes = APIRouter(prefix="/graph")

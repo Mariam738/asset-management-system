@@ -62,14 +62,7 @@ class Asset(BaseModel):
     tags: List[str] 
     meta: Dict[str, Any]  
 
-class AssetResponse (BaseModel):
-    status: str
-    message: str
-    asset: Asset | None = None
+
+
+
     
-class AssetPaginationResponse(BaseModel):
-    total: int
-    skip: int
-    limit: int
-    count: int
-    data: List[Asset]

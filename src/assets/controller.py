@@ -1,4 +1,4 @@
-from src.assets.dtos import AssetCreate, AssetEdit, AssetBulk, Asset, AssetResponse, AssetPaginationResponse
+from src.assets.dtos import AssetCreate, AssetEdit, AssetBulk, Asset
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from src.assets.model import AssetModel
@@ -7,6 +7,7 @@ from src.assets.enums import AssetType, AssetStatus
 from typing import List, Optional
 from datetime import datetime, timezone, date
 from fastapi.responses import Response
+from src.dto_common import ApiResponse, PaginationResponse
 
 
 from deepmerge import Merger # Merge JSON (metadata)
@@ -54,7 +55,7 @@ def create_asset(body: AssetCreate, response:Response, db: Session):
         asset_orm = Asset.model_validate(asset, from_attributes=True)
         if response:
             response.status_code=status.HTTP_200_OK
-        return AssetResponse (status="Updated", message=f"Asset {asset.id} already exists", asset=asset_orm)
+        return ApiResponse(status="Updated", message=f"Asset {asset.id} already exists", data=asset_orm)
     ## New asset
     else:
         try:
@@ -65,14 +66,14 @@ def create_asset(body: AssetCreate, response:Response, db: Session):
             db.refresh(asset)
             
             asset_orm = Asset.model_validate(asset, from_attributes=True)
-            return AssetResponse (status="Created", message=f"Asset {asset.id} created successfully", asset=asset_orm)
+            return ApiResponse(status="Created", message=f"Asset {asset.id} created successfully", data=asset_orm)
         # enforce unique constraints of uq_asset_type_value
         except IntegrityError as e:
             db.rollback()
             print("Integrity Error:", str(e.orig))
             if response: 
                 response.status_code=status.HTTP_409_CONFLICT
-            return AssetResponse (status="Error", message=f"Duplicate asset {asset.id}: another asset with the same type and value already exists under a different ID.", asset=None)
+            return ApiResponse(status="Error", message=f"Duplicate asset {asset.id}: another asset with the same type and value already exists under a different ID.", data=None)
 
 
 def bulk_create_assets(body: List[AssetBulk], response: Response, db: Session):
@@ -145,7 +146,7 @@ def get_assets(db: Session,
     assets = query.all()
     data= [Asset.model_validate(asset, from_attributes=True) for asset in assets]
     
-    return AssetPaginationResponse(total=total, skip=skip, limit=limit, count=len(data), data= data)
+    return PaginationResponse(total=total, skip=skip, limit=limit, count=len(data), data= data)
 
 
 def get_asset(asset_id: str, response: Response, db:Session):
@@ -153,10 +154,10 @@ def get_asset(asset_id: str, response: Response, db:Session):
 
     if not asset:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return AssetResponse(status="Error", message="Asset ID is not found", asset= None)
+        return ApiResponse(status="Error", message="Asset ID is not found", data= None)
     
     asset = Asset.model_validate(asset, from_attributes=True)
-    return AssetResponse(status="Success", message="Asset retrieved successfully", asset= asset)
+    return ApiResponse(status="Success", message="Asset retrieved successfully", data= asset)
 
 
 def update_asset(body: AssetEdit, asset_id: str, response: Response, db:Session):
@@ -164,7 +165,7 @@ def update_asset(body: AssetEdit, asset_id: str, response: Response, db:Session)
 
     if not asset:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return AssetResponse(status="Error", message="Asset ID is not found", asset= None)
+        return ApiResponse(status="Error", message="Asset ID is not found", data= None)
     
     body = body.model_dump(exclude_unset=True)
     for key, value in body.items():
@@ -175,7 +176,7 @@ def update_asset(body: AssetEdit, asset_id: str, response: Response, db:Session)
     db.refresh(asset)
 
     asset = Asset.model_validate(asset, from_attributes=True)
-    return AssetResponse(status="Updated", message="Asset updated successfully", asset= asset)
+    return ApiResponse(status="Updated", message="Asset updated successfully", data= asset)
 
 
 def delete_asset(asset_id: str, db:Session):
