@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    env_file:
+      - .env
+    ports:
+      - 8000:8000
+    volumes: # for hot reload
+      - .:/app

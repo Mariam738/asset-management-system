@@ -1,0 +1,14 @@
+__pycache__/
+.pytest_cache/
+
+# Virtual env
+env/
+
+# Env vars
+*.env
+
+.pytest_cache/
+
+# other
+*.drawio
+*.io.*
